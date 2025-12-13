@@ -1,0 +1,5 @@
+{
+  "name": "TaoLichThiTrucTuyen",
+  "description": "Ứng dụng xếp lịch thi tự động sử dụng thuật toán Hill Climbing với Random Restart để tối ưu hóa lịch trình.",
+  "requestFramePermissions": []
+}
