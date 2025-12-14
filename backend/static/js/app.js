@@ -292,11 +292,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Multi-column sort state
     let sortState = []; // Array of {key, direction}
 
+    // Filter State
+    let filterState = {
+        search: '',
+        subject: '',
+        room: '',
+        date: '',
+        shift: ''
+    };
+
     function displaySchedule(data) {
-        detailedScheduleData = data; // Backend returns detailed list directly
+        detailedScheduleData = data; // Original full data
         currentPage = 1;
 
-        // Default sort: Date -> Shift -> Room -> Student Name
+        // Reset Filter State
+        filterState = { search: '', subject: '', room: '', date: '', shift: '' };
+        document.getElementById('search-input').value = '';
+        document.getElementById('filter-subject').value = '';
+        document.getElementById('filter-room').value = '';
+        document.getElementById('filter-date').value = '';
+        document.getElementById('filter-shift').value = '';
+
+        // Default sort
         sortState = [
             { key: 'date', direction: 'asc' },
             { key: 'startTime', direction: 'asc' },
@@ -304,22 +321,108 @@ document.addEventListener('DOMContentLoaded', () => {
             { key: 'studentName', direction: 'asc' }
         ];
 
-        renderTable();
-
+        // Update UI Components
         const placeholder = document.getElementById('schedule-placeholder');
         const tableContainer = document.getElementById('schedule-table-container');
         const paginationControls = document.getElementById('pagination-controls');
+        const dashboard = document.getElementById('stats-dashboard');
+        const toolbar = document.getElementById('filter-toolbar');
 
         if (data.length === 0) {
             placeholder.classList.remove('hidden');
             tableContainer.classList.add('hidden');
             paginationControls.classList.add('hidden');
+            dashboard.classList.add('hidden');
+            toolbar.classList.add('hidden');
         } else {
             placeholder.classList.add('hidden');
             tableContainer.classList.remove('hidden');
             paginationControls.classList.remove('hidden');
+            dashboard.classList.remove('hidden');
+            toolbar.classList.remove('hidden');
+
+            // Populate functionalities
+            updateStats(data);
+            populateFilters(data);
+            renderTable(); // Initial Render
         }
     }
+
+    function updateStats(data) {
+        const elTotal = document.getElementById('stat-total-exams');
+        const elStudents = document.getElementById('stat-total-students');
+        const elRooms = document.getElementById('stat-total-rooms');
+
+        if (elTotal) elTotal.textContent = data.length;
+
+        if (elStudents) {
+            const uniqueStudents = new Set(data.map(i => i.student_id)).size;
+            elStudents.textContent = uniqueStudents;
+        }
+
+        if (elRooms) {
+            const uniqueRooms = new Set(data.map(i => i.room)).size;
+            elRooms.textContent = uniqueRooms;
+        }
+    }
+
+    function populateFilters(data) {
+        const subjects = [...new Set(data.map(i => i.subject))].sort();
+        const rooms = [...new Set(data.map(i => i.room))].sort((a, b) => {
+            // Sort rooms naturally (Phòng 1, Phòng 2, Phòng 10)
+            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
+        const dates = [...new Set(data.map(i => i.exam_date))].sort();
+
+        const subSelect = document.getElementById('filter-subject');
+        if (subSelect) {
+            subSelect.innerHTML = '<option value="">Tất cả môn</option>' +
+                subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        const roomSelect = document.getElementById('filter-room');
+        if (roomSelect) {
+            roomSelect.innerHTML = '<option value="">Tất cả phòng</option>' +
+                rooms.map(r => `<option value="${r}">${r}</option>`).join('');
+        }
+
+        const dateSelect = document.getElementById('filter-date');
+        if (dateSelect) {
+            dateSelect.innerHTML = '<option value="">Tất cả ngày</option>' +
+                dates.map(d => `<option value="${d}">${d}</option>`).join('');
+        }
+    }
+
+    // Event Listeners for Filters
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        filterState.search = e.target.value.toLowerCase();
+        currentPage = 1;
+        renderTable();
+    });
+
+    document.getElementById('filter-subject').addEventListener('change', (e) => {
+        filterState.subject = e.target.value;
+        currentPage = 1;
+        renderTable();
+    });
+
+    document.getElementById('filter-room').addEventListener('change', (e) => {
+        filterState.room = e.target.value;
+        currentPage = 1;
+        renderTable();
+    });
+
+    document.getElementById('filter-date').addEventListener('change', (e) => {
+        filterState.date = e.target.value;
+        currentPage = 1;
+        renderTable();
+    });
+
+    document.getElementById('filter-shift').addEventListener('change', (e) => {
+        filterState.shift = e.target.value;
+        currentPage = 1;
+        renderTable();
+    });
 
     function renderTable() {
         const table = document.getElementById('schedule-table');
@@ -329,8 +432,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const prevPageBtn = document.getElementById('prev-page-btn');
         const nextPageBtn = document.getElementById('next-page-btn');
 
-        // Sort
-        detailedScheduleData.sort((a, b) => {
+        // 1. FILTER
+        let filteredData = detailedScheduleData.filter(item => {
+            // Search
+            const s = filterState.search;
+            const matchesSearch = !s ||
+                item.student_name.toLowerCase().includes(s) ||
+                item.student_id.toLowerCase().includes(s);
+
+            // Subject
+            const matchesSubject = !filterState.subject || item.subject === filterState.subject;
+
+            // Room
+            const matchesRoom = !filterState.room || item.room === filterState.room;
+
+            // Date
+            const matchesDate = !filterState.date || item.exam_date === filterState.date;
+
+            // Shift
+            const matchesShift = !filterState.shift || item.shift === filterState.shift;
+
+            return matchesSearch && matchesSubject && matchesRoom && matchesDate && matchesShift;
+        });
+
+        // 2. SORT
+        filteredData.sort((a, b) => {
             const mapKey = (k) => {
                 if (k === 'studentName') return 'student_name';
                 if (k === 'studentId') return 'student_id';
@@ -351,9 +477,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Pagination
-        const totalPages = Math.ceil(detailedScheduleData.length / rowsPerPage);
+        const totalPages = Math.ceil(filteredData.length / rowsPerPage);
         const start = (currentPage - 1) * rowsPerPage;
-        const pageItems = detailedScheduleData.slice(start, start + rowsPerPage);
+        const pageItems = filteredData.slice(start, start + rowsPerPage);
 
         // Header
         thead.innerHTML = `
