@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Lịch Thi Trực Tuyến</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tải thư viện XLSX (SheetJS) để đọc file Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Tải thư viện jsPDF để xuất PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <!-- Thư viện html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* Sử dụng font Inter mặc định của Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .hero-overlay {
+            background: linear-gradient(0deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85));
+        }
+
+        .form-section {
+            background-color: #fffafb;
+            /* Màu hồng rất nhạt */
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-white text-gray-800">
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm shadow-md">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo và Tên Web -->
+                <div class="flex items-center space-x-2">
+                    <svg width="40" height="40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="200" height="200" rx="30" fill="#FFF1F2" />
+                        <rect x="30" y="60" width="50" height="110" rx="10" fill="#F472B6" />
+                        <rect x="90" y="30" width="50" height="140" rx="10" fill="#EC4899" />
+                        <rect x="150" y="80" width="50" height="90" rx="10" fill="#D946EF"
+                            transform="translate(350, 250) rotate(180)" />
+                    </svg>
+                    <span class="font-bold text-xl text-pink-600">TaoLichThiTrucTuyen</span>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="hidden md:flex md:space-x-8">
+                    <a href="#gioi-thieu" class="font-medium text-gray-600 hover:text-pink-600 transition-colors">Giới
+                        thiệu</a>
+                    <a href="#huong-dan" class="font-medium text-gray-600 hover:text-pink-600 transition-colors">Hướng
+                        dẫn</a>
+                    <a href="#ve-chung-toi" class="font-medium text-gray-600 hover:text-pink-600 transition-colors">Về
+                        chúng tôi</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <!-- PHẦN GIỚI THIỆU (HERO) -->
+        <section id="gioi-thieu" class="relative h-screen flex items-center justify-center pt-16 overflow-hidden">
+            <!-- Ảnh nền minh họa -->
+            <div class="absolute inset-0 w-full h-full grid grid-cols-2 grid-rows-2 opacity-30">
+                <img src="/static/img/Screenshot 2025-11-14 001048.png" class="w-full h-full object-cover">
+                <img src="/static/img/Screenshot 2025-11-14 001417.png" class="w-full h-full object-cover">
+                <img src="/static/img/Screenshot 2025-11-14 001442.png" class="w-full h-full object-cover">
+                <img src="/static/img/Screenshot 2025-11-14 001738.png" class="w-full h-full object-cover">
+            </div>
+
+            <!-- Lớp phủ văn bản -->
+            <div
+                class="relative z-10 text-center max-w-3xl mx-auto p-8 bg-white/90 rounded-xl shadow-xl backdrop-blur-sm">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-pink-600 mb-6">
+                    Xếp Lịch Thi Thông Minh
+                </h1>
+                <p class="text-lg text-gray-700 mb-4">
+                    Chào mừng bạn đến với <span class="font-semibold text-pink-600">TaoLichThiTrucTuyen</span>! Công cụ
+                    giúp bạn tự động hóa việc tạo và tối ưu hóa lịch thi một cách nhanh chóng, công bằng và hiệu quả.
+                </p>
+                <p class="text-lg text-gray-700 mb-8">
+                    Chỉ cần cung cấp thông tin về ngày thi, phòng thi, và dữ liệu học sinh, hệ thống sẽ tự động xếp
+                    lịch, giải quyết các xung đột và cân bằng số lượng, giúp bạn tiết kiệm thời gian và công sức.
+                </p>
+                <a href="#tao-lich"
+                    class="inline-block bg-pink-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-lg hover:bg-pink-700 transition-transform hover:scale-105">
+                    Bắt đầu tạo lịch
+                </a>
+            </div>
+        </section>
+
+        <!-- PHẦN HƯỚNG DẪN -->
+        <section id="huong-dan" class="py-24 bg-pink-50/50">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Hướng Dẫn Sử Dụng Chi Tiết</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Thực hiện theo các bước sau để có ngay lịch thi tối ưu.
+                    </p>
+                </div>
+
+                <div class="space-y-16">
+                    <!-- BƯỚC 1: Chuẩn bị dữ liệu đầu vào -->
+                    <article class="bg-white p-8 rounded-lg shadow-lg border border-pink-100">
+                        <h3 class="text-2xl font-bold text-pink-700 mb-6">1️⃣ Chuẩn bị dữ liệu đầu vào</h3>
+                        <p class="text-gray-700 mb-4">Chọn file học sinh (Excel hoặc JSON) theo một trong các định dạng
+                            sau:</p>
+
+                        <div class="space-y-6">
+                            <!-- Dạng 1 -->
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-800">Excel dạng 1:</h4>
+                                <p class="text-gray-600 mb-2">Header là tên môn, ô chứa thời lượng môn (phút). Ô trống →
+                                    học sinh không thi môn đó.</p>
+                                <img src="/static/img/Screenshot 2025-11-14 001417.png"
+                                    alt="Ảnh minh họa: File Excel dạng 1"
+                                    class="rounded-md border border-pink-200 w-full object-contain max-h-72"
+                                    onerror="this.src='https://placehold.co/800x300/FFF1F2/EC4899?text=Excel+Dang+1&font=inter'">
+                            </div>
+                            <!-- Dạng 2 -->
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-800 mt-4">Excel dạng 2:</h4>
+                                <p class="text-gray-600 mb-2">Header môn kèm thời lượng (phút), ô tick ✓ → học sinh thi
+                                    môn đó, ô trống → không thi.</p>
+                                <img src="/static/img/Screenshot 2025-11-14 001442.png"
+                                    alt="Ảnh minh họa: File Excel dạng 2"
+                                    class="rounded-md border border-pink-200 w-full object-contain max-h-72"
+                                    onerror="this.src='https://placehold.co/800x300/FFF1F2/EC4899?text=Excel+Dang+2&font=inter'">
+                            </div>
+                            <!-- JSON -->
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-800 mt-4">JSON:</h4>
+                                <p class="text-gray-600 mb-2">Định dạng
+                                    <code>{ "student_id": 1, "name": "SV1", "subjects": { "Toán": 60, "Lý": 90 } }</code>.
+                                </p>
+                                <img src="/static/img/Screenshot 2025-11-14 001048.png"
+                                    alt="Ảnh minh họa: File JSON mẫu"
+                                    class="rounded-md border border-pink-200 w-full object-contain max-h-72"
+                                    onerror="this.src='https://placehold.co/800x300/FFF1F2/EC4899?text=JSON+Mau&font=inter'">
+                            </div>
+                        </div>
+
+                        <h4 class="font-semibold text-lg text-gray-800 mt-6 mb-2">Kiểm tra ràng buộc dữ liệu:</h4>
+                        <p class="text-gray-700 mb-4">Thời lượng của cùng một môn phải <b>giống nhau</b> cho tất cả học
+                            sinh. Môn bị bỏ trống hoặc không tích → học sinh không thi môn đó.</p>
+                        <img src="/static/img/Screenshot 2025-11-14 122050.png"
+                            alt="Ảnh minh họa: Kiểm tra ràng buộc thời lượng môn"
+                            class="rounded-md border border-pink-200 w-full"
+                            onerror="this.src='https://placehold.co/800x200/FFF1F2/EC4899?text=Data+Constraint+Check&font=inter'">
+                    </article>
+
+                    <!-- BƯỚC 2: Thiết lập thông tin lịch thi -->
+                    <article class="bg-white p-8 rounded-lg shadow-lg border border-pink-100">
+                        <h3 class="text-2xl font-bold text-pink-700 mb-6">2️⃣ Thiết lập thông tin lịch thi</h3>
+                        <p class="text-gray-700 mb-6">Điền đầy đủ các thông tin chung tại khu vực tạo lịch. Các trường
+                            sẽ tuần tự hiện ra:</p>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="border border-pink-100 p-3 rounded-lg bg-pink-50/50">
+                                <p class="font-medium text-gray-800 text-center">Chọn ngày bắt đầu/kết thúc</p>
+                                <img src="/static/img/image1.png" alt="Ảnh minh họa: Chọn ngày"
+                                    class="rounded-md mt-2 w-full"
+                                    onerror="this.src='https://placehold.co/400x200/FFF1F2/EC4899?text=Select+Dates&font=inter'">
+                            </div>
+                            <div class="border border-pink-100 p-3 rounded-lg bg-pink-50/50">
+                                <p class="font-medium text-gray-800 text-center">Chọn giờ ca sáng/chiều</p>
+                                <img src="/static/img/image2.png" alt="Ảnh minh họa: Chọn giờ ca"
+                                    class="rounded-md mt-2 w-full"
+                                    onerror="this.src='https://placehold.co/400x200/FFF1F2/EC4899?text=Select+Time+Slots&font=inter'">
+                            </div>
+                            <div class="border border-pink-100 p-3 rounded-lg bg-pink-50/50">
+                                <p class="font-medium text-gray-800 text-center">Thời gian nghỉ (phút)</p>
+                                <img src="/static/img/image3.png" alt="Ảnh minh họa: Nghỉ giữa môn"
+                                    class="rounded-md mt-2 w-full"
+                                    onerror="this.src='https://placehold.co/400x200/FFF1F2/EC4899?text=Break+Time&font=inter'">
+                            </div>
+                            <div class="border border-pink-100 p-3 rounded-lg bg-pink-50/50">
+                                <p class="font-medium text-gray-800 text-center">Nhập số phòng</p>
+                                <img src="/static/img/image4.png" alt="Ảnh minh họa: Nhập số phòng"
+                                    class="rounded-md mt-2 w-full"
+                                    onerror="this.src='https://placehold.co/400x200/FFF1F2/EC4899?text=Room+Number&font=inter'">
+                            </div>
+                            <div class="border border-pink-100 p-3 rounded-lg bg-pink-50/50">
+                                <p class="font-medium text-gray-800 text-center">Đặt tên các phòng</p>
+                                <img src="/static/img/image4.png" alt="Ảnh minh họa: Tên phòng"
+                                    class="rounded-md mt-2 w-full"
+                                    onerror="this.src='https://placehold.co/400x200/FFF1F2/EC4899?text=Room+Names&font=inter'">
+                            </div>
+                            <div class="border border-pink-100 p-3 rounded-lg bg-pink-50/50">
+                                <p class="font-medium text-gray-800 text-center">Tùy chọn Min/Max số học sinh/phòng</p>
+                                <img src="/static/img/image5.png" alt="Ảnh minh họa: Min/Max"
+                                    class="rounded-md mt-2 w-full"
+                                    onerror="this.src='https://placehold.co/400x200/FFF1F2/EC4899?text=Constraints&font=inter'">
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- BƯỚC 3: Upload dữ liệu và sinh lịch -->
+                    <article class="bg-white p-8 rounded-lg shadow-lg border border-pink-100">
+                        <h3 class="text-2xl font-bold text-pink-700 mb-6">3️⃣ Upload dữ liệu và sinh lịch</h3>
+                        <p class="text-gray-700 mb-4">Sau khi điền đủ thông tin và tải file lên, nhấn nút <b>"Tạo
+                                Lịch"</b>.</p>
+                        <img src="/static/img/image6.png" alt="Ảnh minh họa: Nút Tạo Lịch"
+                            class="rounded-md border border-pink-200 w-full mb-4"
+                            onerror="this.src='https://placehold.co/800x200/FFF1F2/EC4899?text=Create+Schedule+Button&font=inter'">
+                        <p class="text-gray-700 mb-4">Web sẽ đọc file (đã chọn) và:</p>
+                        <ul class="list-disc list-inside space-y-2 mb-4 text-gray-700">
+                            <li>Kiểm tra ràng buộc thời lượng môn.</li>
+                            <li>Sinh slot thi theo ca, thời lượng, và nghỉ giữa môn.</li>
+                            <li>Phân phòng và cân bằng số học sinh.</li>
+                        </ul>
+                        <p class="text-gray-700 mb-4">Nếu dữ liệu không hợp lệ (thời lượng khác nhau, file sai định
+                            dạng,…) → web sẽ báo lỗi (alert) và yêu cầu chỉnh sửa.</p>
+                        <img src="/static/img/image7.png" alt="Ảnh minh họa: Thông báo lỗi dữ liệu"
+                            class="rounded-md border border-pink-200 w-full"
+                            onerror="this.src='https://placehold.co/800x200/FFF1F2/EC4899?text=Data+Error+Alert&font=inter'">
+                    </article>
+
+                    <!-- BƯỚC 4: Xem và xuất lịch thi -->
+                    <article class="bg-white p-8 rounded-lg shadow-lg border border-pink-100">
+                        <h3 class="text-2xl font-bold text-pink-700 mb-6">4️⃣ Xem và xuất lịch thi</h3>
+                        <p class="text-gray-700 mb-4">Lịch thi sẽ hiển thị ở dạng bảng chi tiết:</p>
+                        <p class="font-medium text-gray-800">Học sinh, Mã SV, Môn thi, Thời lượng, Ngày thi, Ca thi, Giờ
+                            bắt đầu, Giờ kết thúc, Phòng thi.</p>
+                        <img src="/static/img/image8.png" alt="Ảnh minh họa: Bảng lịch thi chi tiết"
+                            class="rounded-md border border-pink-200 w-full mt-4 max-h-96 object-contain"
+                            onerror="this.src='https://placehold.co/800x400/FFF1F2/EC4899?text=Bang+Ket+Qua&font=inter'">
+                        <p class="text-gray-700 mt-6 mb-4">Bạn có thể xuất PDF để in dán hoặc xuất Excel để chỉnh sửa,
+                            gửi email.</p>
+                        <img src="/static/img/image9.png" alt="Ảnh minh họa: Nút xuất PDF/Excel"
+                            class="rounded-md border border-pink-200 w-full"
+                            onerror="this.src='https://placehold.co/800x150/FFF1F2/EC4899?text=Export+Buttons&font=inter'">
+                    </article>
+
+                    <!-- BƯỚC 5: Lưu ý -->
+                    <article class="bg-white p-8 rounded-lg shadow-lg border border-pink-100">
+                        <h3 class="text-2xl font-bold text-pink-700 mb-6">5️⃣ Lưu ý</h3>
+                        <ul class="list-disc list-inside space-y-2 mb-4 text-gray-700">
+                            <li>Mỗi môn chỉ thi 1 lần trong ca → tránh trùng môn.</li>
+                            <li>Hệ thống cân bằng phòng dựa trên số lượng học sinh.</li>
+                            <li>Khoảng nghỉ giữa môn sẽ được tính khi xếp slot.</li>
+                            <li>Nếu muốn thay đổi lịch, bạn có thể thay đổi thông tin ca, ngày, phòng rồi upload lại
+                                file (hoặc nhấn "Tạo Lịch" lại nếu file không đổi).</li>
+                            <li>Nếu không tạo được lịch hãy xem lại số phòng hoặc min/max số học sinh trong một phòng,
+                                vì nó có thể không khớp hoặc xung đột</li>
+                        </ul>
+                        <img src="/static/img/image.png" alt="Ảnh minh họa: Chỉnh sửa thông tin ca/phòng"
+                            class="rounded-md border border-pink-200 mt-4 w-full"
+                            onerror="this.src='https://placehold.co/800x200/FFF1F2/EC4899?text=Edit+Config&font=inter'">
+                    </article>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- PHẦN TẠO LỊCH (FORM) -->
+        <section id="tao-lich" class="py-24 form-section">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Bắt Đầu Cấu Hình Lịch Thi</h2>
+                </div>
+
+                <form id="schedule-form"
+                    class="bg-white p-8 md:p-12 rounded-xl shadow-2xl border border-pink-200 space-y-10">
+
+                    <!-- 1. Thông tin chung -->
+                    <fieldset>
+                        <legend class="text-2xl font-bold text-pink-600 mb-6 border-b-2 border-pink-200 pb-2">1. Thông
+                            tin chung</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Ngày bắt
+                                    đầu</label>
+                                <input type="date" id="start_date" name="start_date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Ngày kết
+                                    thúc</label>
+                                <input type="date" id="end_date" name="end_date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                                    required>
+                            </div>
+                        </div>
+
+                        <!-- Rest days container -->
+                        <div id="rest-days-container" class="hidden mt-6 space-y-4 transition-all duration-500">
+                            <label class="block text-sm font-medium text-gray-700">Chọn ngày nghỉ (mặc định T7, CN được
+                                chọn)</label>
+                            <div id="rest-days-checkboxes"
+                                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-2">
+                                <!-- Checkboxes will be inserted here by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Thời gian ca thi -->
+                        <div id="time-slots-container" class="hidden mt-6 space-y-6 transition-all duration-500">
+                            <div>
+                                <label for="session_mode" class="block text-sm font-medium text-gray-700 mb-1">Chế độ ca
+                                    thi</label>
+                                <select id="session_mode" name="session_mode"
+                                    class="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500">
+                                    <option value="both">Sáng và Chiều</option>
+                                    <option value="morning">Chỉ Sáng</option>
+                                    <option value="afternoon">Chỉ Chiều</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div id="morning-shift-inputs"
+                                    class="p-4 border rounded-lg bg-pink-50/50 border-pink-200">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Ca Sáng</h4>
+                                    <div class="flex space-x-2">
+                                        <div>
+                                            <label for="start_time_morning"
+                                                class="block text-xs font-medium text-gray-700">Bắt đầu</label>
+                                            <input type="time" id="start_time_morning" name="start_time_morning"
+                                                value="07:00"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                                                required>
+                                        </div>
+                                        <div>
+                                            <label for="end_time_morning"
+                                                class="block text-xs font-medium text-gray-700">Kết thúc</label>
+                                            <input type="time" id="end_time_morning" name="end_time_morning"
+                                                value="11:30"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                                                required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="afternoon-shift-inputs"
+                                    class="p-4 border rounded-lg bg-pink-50/50 border-pink-200">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Ca Chiều</h4>
+                                    <div class="flex space-x-2">
+                                        <div>
+                                            <label for="start_time_afternoon"
+                                                class="block text-xs font-medium text-gray-700">Bắt đầu</label>
+                                            <input type="time" id="start_time_afternoon" name="start_time_afternoon"
+                                                value="13:30"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                                                required>
+                                        </div>
+                                        <div>
+                                            <label for="end_time_afternoon"
+                                                class="block text-xs font-medium text-gray-700">Kết thúc</label>
+                                            <input type="time" id="end_time_afternoon" name="end_time_afternoon"
+                                                value="17:00"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                                                required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="break_minutes" class="block text-sm font-medium text-gray-700 mb-1">Thời
+                                    gian nghỉ giữa các môn (phút)</label>
+                                <input type="number" id="break_minutes" name="break_minutes" value="10" min="0"
+                                    class="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                                    required>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- 2. Phòng thi -->
+                    <fieldset>
+                        <legend class="text-2xl font-bold text-pink-600 mb-6 border-b-2 border-pink-200 pb-2">2. Phòng
+                            thi</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                            <div>
+                                <label for="num_rooms" class="block text-sm font-medium text-gray-700 mb-1">Số lượng
+                                    phòng</label>
+                                <input type="number" id="num_rooms" name="num_rooms" min="1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                                    placeholder="Để trống để tự động tính">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Ràng buộc số học sinh (tùy
+                                    chọn)</label>
+                                <div class="flex space-x-2">
+                                    <input type="number" id="min_students" name="min_students"
+                                        placeholder="Tối thiểu (Min)" min="1"
+                                        class="w-1/2 md:w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500">
+                                    <input type="number" id="max_students" name="max_students"
+                                        placeholder="Tối đa (Max)" min="1"
+                                        class="w-1/2 md:w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tên phòng -->
+                        <div id="room-names-container" class="mt-6 hidden transition-all duration-500">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nhập tên các phòng</label>
+                            <div id="room-names-inputs" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <!-- JS sẽ chèn input vào đây -->
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- 3. Dữ liệu -->
+                    <fieldset>
+                        <legend class="text-2xl font-bold text-pink-600 mb-6 border-b-2 border-pink-200 pb-2">3. Dữ liệu
+                            học sinh & môn thi</legend>
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                            <p class="text-sm text-gray-600">
+                                Tải lên tệp Excel (<code>.xlsx</code>) hoặc JSON (<code>.json</code>).
+                            </p>
+                            <button type="button" id="download-template-btn"
+                                class="flex-shrink-0 text-sm bg-green-600 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-colors">
+                                Tải file mẫu
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-center w-full">
+                            <label for="data_file"
+                                class="flex flex-col items-center justify-center w-full h-32 border-2 border-pink-300 border-dashed rounded-lg cursor-pointer bg-pink-50 hover:bg-pink-100 transition-colors">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <svg class="w-10 h-10 mb-3 text-pink-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V16a4 4 0 01-4 4H7z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 16v-4a2 2 0 012-2h2a2 2 0 012 2v4"></path>
+                                    </svg>
+                                    <p class="mb-2 text-sm text-gray-600"><span class="font-semibold">Nhấn để tải
+                                            lên</span> hoặc kéo thả</p>
+                                    <p class="text-xs text-gray-500">JSON hoặc Excel (XLSX)</p>
+                                </div>
+                                <input id="data_file" type="file" class="hidden" accept=".xlsx, .json">
+                            </label>
+                        </div>
+                        <p id="file-upload-status" class="text-center mt-2 text-sm text-gray-500"></p>
+                    </fieldset>
+
+                    <!-- Nút Tạo Lịch -->
+                    <div class="text-center pt-6">
+                        <button type="button" id="create-schedule-btn"
+                            class="w-full md:w-1/2 bg-pink-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg text-lg hover:bg-pink-700 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Tạo Lịch
+                        </button>
+                        <p id="loading-status" class="mt-4 text-pink-600 hidden">
+                            <svg class="animate-spin inline-block h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            Đang xử lý, vui lòng chờ...
+                        </p>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+
+        <!-- PHẦN KẾT QUẢ (ẩn ban đầu) -->
+        <section id="ket-qua" class="py-24 bg-white hidden">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Lịch Thi Đã Được Tạo</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Đây là kết quả lịch thi ban đầu. Bạn có thể tối ưu hoặc xuất file.
+                    </p>
+                </div>
+
+                <!-- Khu vực hiển thị lịch thi -->
+                <div id="schedule-output"
+                    class="bg-gray-50 border border-pink-200 rounded-lg shadow-inner p-6 min-h-[300px] mb-12">
+                    <p class="text-gray-500 text-center" id="schedule-placeholder">Lịch thi chi tiết sẽ được hiển thị ở
+                        đây...</p>
+                    <!-- Bảng lịch thi -->
+                    <div class="overflow-x-auto relative shadow-md sm:rounded-lg mt-6 hidden"
+                        id="schedule-table-container">
+                        <table id="schedule-table" class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-pink-100 cursor-pointer">
+                                <!-- Header sẽ được tạo bằng JS -->
+                            </thead>
+                            <tbody class="bg-white">
+                                <!-- Dữ liệu sẽ được tạo bằng JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Phân trang -->
+                    <div id="pagination-controls" class="flex justify-between items-center mt-6 hidden">
+                        <button id="prev-page-btn"
+                            class="bg-pink-500 text-white py-2 px-4 rounded-lg hover:bg-pink-600 disabled:opacity-50">
+                            &larr; Trang trước
+                        </button>
+                        <span id="page-info" class="text-sm font-medium text-gray-700"></span>
+                        <button id="next-page-btn"
+                            class="bg-pink-500 text-white py-2 px-4 rounded-lg hover:bg-pink-600 disabled:opacity-50">
+                            Trang sau &rarr;
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Nút Tạo lại và Xuất File -->
+                <div class="flex flex-col md:flex-row justify-center items-center gap-6">
+                    <button type="button" id="regenerate-schedule-btn"
+                        class="w-full md:w-auto bg-pink-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-pink-800 transition-all text-base">
+                        Tạo lại
+                    </button>
+                    <button type="button" id="export-pdf-btn"
+                        class="w-full md:w-auto bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-red-700 transition-all text-base">
+                        Xuất File PDF
+                    </button>
+                    <button type="button" id="export-excel-btn"
+                        class="w-full md:w-auto bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition-all text-base">
+                        Xuất File Excel
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer id="ve-chung-toi" class="bg-gray-900 text-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+                <div>
+                    <h3 class="font-bold text-lg text-pink-400 mb-2">TaoLichThiTrucTuyen</h3>
+                    <p class="text-gray-400">
+                        Giải pháp xếp lịch thi tự động, thông minh, và tiết kiệm thời gian.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-pink-400 mb-2">Liên kết nhanh</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#gioi-thieu" class="text-gray-400 hover:text-white transition-colors">Giới
+                                thiệu</a></li>
+                        <li><a href="#huong-dan" class="text-gray-400 hover:text-white transition-colors">Hướng dẫn</a>
+                        </li>
+                        <li><a href="#tao-lich" class="text-gray-400 hover:text-white transition-colors">Tạo lịch</a>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-pink-400 mb-2">Liên hệ</h3>
+                    <p class="text-gray-400">Email: support@taolichthi.vn</p>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center text-gray-500">
+                &copy; 2025 TaoLichThiTrucTuyen. Mọi quyền được bảo lưu.
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
