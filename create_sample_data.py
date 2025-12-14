@@ -5,7 +5,7 @@ import random
 students = []
 subjects = ["Math", "Physics", "Chemistry", "Biology", "Literature", "History"]
 
-for i in range(1, 51):
+for i in range(1, 301):
     student = {
         "Student ID": f"SV{i:03d}",
         "Name": f"Student {i}",
